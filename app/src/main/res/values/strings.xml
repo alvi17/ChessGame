@@ -4,15 +4,9 @@
 	<item>New Game</item>
 	<item>Edit Board</item>
 	<item>Flip Board</item>
-	<item>Bluetooth</item>
-	<item>Load PGN</item>
 	<item>Settings</item>
-	<item>Resign Game</item>
-	<item>Go to move number</item>
-	<item>Force computer move</item>
-	<item>Select opening book</item>
-    <item>Rating and Feedback</item>
-	<item>About</item>
+	<item>Quit Game</item>
+
 	</string-array>
 	<string name="app_name">ChessTastic™</string>
     <string name="app_name_pop">ChessTastic™  Beta  1.0</string>

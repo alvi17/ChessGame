@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import org.empyrn.darkknight.bluetooth.BluetoothGameController;
-import org.empyrn.darkknight.bluetooth.DeviceListActivity;
 import org.empyrn.darkknight.gamelogic.ChessController;
 import org.empyrn.darkknight.gamelogic.ChessParseError;
 import org.empyrn.darkknight.gamelogic.GameTree.Node;
@@ -38,10 +36,13 @@ import android.graphics.Point;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -73,6 +74,7 @@ import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -85,8 +87,15 @@ import com.github.amlcurran.showcaseview.OnShowcaseEventListener;
 import com.github.amlcurran.showcaseview.ShowcaseView;
 import com.github.amlcurran.showcaseview.targets.Target;
 import com.github.amlcurran.showcaseview.targets.ViewTarget;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 
 import alvi17.chessgame.R;
+
+import static org.empyrn.darkknight.Appearance.context;
 
 public class ChessTastic extends AppCompatActivity implements GUIInterface, OnShowcaseEventListener {
 	// FIXME!!! Computer clock should stop if phone turned off (computer stops
@@ -154,7 +163,7 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 	private long lastComputationMillis; // Time when engine last showed that it
 										// was computing.
 
-	BluetoothGameController bGameCtrl = null;
+
 
 	PgnScreenText gameTextListener;
 	
@@ -175,6 +184,14 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
     private LinearLayout homelayout;
     private SharedPreferences sharedPreferences;
     private Toolbar toolbar;
+
+
+    AdView adView;
+    AdRequest adRequest;
+
+    LinearLayout linearLayout;
+    InterstitialAd interstitialAd;
+    boolean adLoad=false;
 
     /** Called when the activity is first created. */
 	@SuppressLint("NewApi")
@@ -241,7 +258,58 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 		ctrl.startGame();
 
 
+        linearLayout=(LinearLayout)findViewById(R.id.adsLayout);
+
+        adView=new AdView(this);
+        adRequest=new AdRequest.Builder().build();
+        adView.setAdSize(AdSize.BANNER);
+        adView.setAdUnitId("ca-app-pub-6508526601344465/4115437630");
+        adView.loadAd(adRequest);
+        linearLayout.addView(adView);
+        initFullScreenAd();
+
 	}
+
+
+	Handler handler;
+    Runnable runnable;
+    public void initFullScreenAd()
+    {
+
+        handler=new Handler();
+
+        runnable=new Runnable() {
+            @Override
+            public void run() {
+                interstitialAd=new  InterstitialAd(ChessTastic.this);
+                interstitialAd.setAdUnitId("ca-app-pub-6508526601344465/5592170834");
+                AdRequest aRequest = new AdRequest.Builder().addTestDevice("858A1315E0C450B387A59834A836CF5D").build();
+
+                // Begin loading your interstitial. addTestDevice("858A1315E0C450B387A59834A836CF5D")
+                interstitialAd.loadAd(aRequest);
+
+                interstitialAd.setAdListener(
+                        new AdListener() {
+                            @Override
+                            public void onAdLoaded() {
+                                super.onAdLoaded();
+                                interstitialAd.show();
+                                try {
+                                    handler.removeCallbacks(runnable);
+                                }catch (Exception e)
+                                {
+
+                                }
+                            }
+                        }
+                );
+            }
+        };
+        handler.postDelayed(runnable,40000);
+    }
+
+
+
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void dimView(LinearLayout view) {
@@ -259,12 +327,12 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
                 choice = sharedPreferences.getInt("Choice",4);
                 switch(choice)
                 {
-                    case 0: getWindow().setStatusBarColor(getResources().getColor(R.color.darkred));break;
-                    case 1:	getWindow().setStatusBarColor(getResources().getColor(R.color.darkblue));break;
-                    case 2:	getWindow().setStatusBarColor(getResources().getColor(R.color.darkpurple));break;
-                    case 3:	getWindow().setStatusBarColor(getResources().getColor(R.color.darkgreen));break;
-                    case 4:	getWindow().setStatusBarColor(getResources().getColor(R.color.darkorange));break;
-                    case 5:	getWindow().setStatusBarColor(getResources().getColor(R.color.darkgrey));break;
+                    case 0: getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkred));break;
+                    case 1:	getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkblue));break;
+                    case 2:	getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkpurple));break;
+                    case 3:	getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkgreen));break;
+                    case 4:	getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkorange));break;
+                    case 5:	getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkgrey));break;
                 }
             }
         }
@@ -279,7 +347,7 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
     public void onShowcaseViewShow(ShowcaseView showcaseView) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        getWindow().setStatusBarColor(getResources().getColor(R.color.darkgrey));}
+        getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkgrey));}
         dimView(homelayout);
     }
 
@@ -493,12 +561,12 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
                                 choice = sharedPreferences.getInt("Choice",4);
                                 switch(choice)
                                 {
-                                    case 0: getWindow().setStatusBarColor(getResources().getColor(R.color.darkred));break;
-                                    case 1:	getWindow().setStatusBarColor(getResources().getColor(R.color.darkblue));break;
-                                    case 2:	getWindow().setStatusBarColor(getResources().getColor(R.color.darkpurple));break;
-                                    case 3:	getWindow().setStatusBarColor(getResources().getColor(R.color.darkgreen));break;
-                                    case 4:	getWindow().setStatusBarColor(getResources().getColor(R.color.darkorange));break;
-                                    case 5:	getWindow().setStatusBarColor(getResources().getColor(R.color.darkgrey));break;
+                                    case 0: getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkred));break;
+                                    case 1:	getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkblue));break;
+                                    case 2:	getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkpurple));break;
+                                    case 3:	getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkgreen));break;
+                                    case 4:	getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkorange));break;
+                                    case 5:	getWindow().setStatusBarColor(ContextCompat.getColor(ChessTastic.this, R.color.darkgrey));break;
                                 }
                             }
                         }
@@ -620,7 +688,7 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 
             if (settings2.getBoolean("my_first_time", true)) {
                 //the app is being launched for first time, do something
-                homelayout=(LinearLayout)findViewById(R.id.my_home);
+                homelayout=(LinearLayout) findViewById(R.id.my_home);
 
                 displayShowcaseViewOne();
 
@@ -809,10 +877,7 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 		}
 		setNotification(false);
 
-		if (bGameCtrl != null) {
-			bGameCtrl.stopBluetoothService();
-			bGameCtrl = null;
-		}
+
 
 		super.onDestroy();
 	}
@@ -882,20 +947,7 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 		cb.setColors();
 
 		// if Bluetooth was on but has been changed, disable it
-		if (!gameMode.bluetoothMode()) {
-			if (bGameCtrl != null) {
-				bGameCtrl.stopBluetoothService();
-				bGameCtrl = null;
-			}
-		}
 
-		// otherwise, if it has been activated, enable it
-		else {
-			if (bGameCtrl == null) {
-				bGameCtrl = new BluetoothGameController(this, ctrl, gameMode);
-				bGameCtrl.setupBluetoothService();
-			}
-		}
 
 		gameTextListener.clear();
 		ctrl.prefsChanged();
@@ -1132,58 +1184,8 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 				}
 			}
 			break;
-		case RESULT_LOAD_PGN:
-			if (resultCode == RESULT_OK) {
-				try {
-					String pgn = data.getAction();
-					ctrl.setFENOrPGN(pgn);
-				} catch (ChessParseError e) {
-					Toast.makeText(getApplicationContext(), e.getMessage(),
-							Toast.LENGTH_SHORT).show();
-				}
-			}
-			break;
-		case REQUEST_CONNECT_DEVICE:
-			if (bGameCtrl == null) {
-				if (bGameCtrl == null) {
-					Toast.makeText(getApplicationContext(),
-							"Bluetooth mode is not enabled", Toast.LENGTH_SHORT)
-							.show();
-					return;
-				}
-			}
 
-			// When DeviceListActivity returns with a device to connect
-			if (resultCode == Activity.RESULT_OK) {
-				// Get the device MAC address
-				String address = data.getExtras().getString(
-						DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-				// Get the BluetoothDevice object
-				BluetoothDevice device = bGameCtrl.getmBluetoothAdapter()
-						.getRemoteDevice(address);
 
-				if (device != null) {
-					// Attempt to connect to the device
-					bGameCtrl.connectToDevice(device);
-				} else {
-					showDialog(R.string.bt_not_enabled_leaving);
-				}
-			}
-			break;
-		case REQUEST_ENABLE_BT:
-			// when the request to enable Bluetooth returns
-			if (resultCode == Activity.RESULT_OK) {
-				if (bGameCtrl == null)
-					bGameCtrl = new BluetoothGameController(this, ctrl,
-							gameMode);
-
-				// Bluetooth is now enabled, so set up a chat session
-				bGameCtrl.setupBluetoothService();
-			} else {
-				// Bluetooth not enabled or an error occurred
-				showDialog(R.string.bt_not_enabled_leaving);
-			}
-			break;
 		}
 	}
 
@@ -1535,50 +1537,7 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 			AlertDialog alert = builder.create();
 			return alert;
 		}
-		case SELECT_PGN_FILE_DIALOG: {
-			final String[] fileNames = findFilesInDirectory(pgnDir);
-			final int numFiles = fileNames.length;
-			if (numFiles == 0) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-				builder.setTitle(R.string.app_name).setMessage(
-						R.string.no_pgn_files);
-				AlertDialog alert = builder.create();
-				return alert;
-			}
-			int defaultItem = 0;
-			String currentPGNFile = settings.getString("currentPGNFile", "");
-			for (int i = 0; i < numFiles; i++) {
-				if (currentPGNFile.equals(fileNames[i])) {
-					defaultItem = i;
-					break;
-				}
-			}
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.select_pgn_file);
-			builder.setSingleChoiceItems(fileNames, defaultItem,
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int item) {
-							Editor editor = settings.edit();
-							String pgnFile = fileNames[item].toString();
-							editor.putString("currentPGNFile", pgnFile);
-							editor.commit();
-							String sep = File.separator;
-							String pathName = Environment
-									.getExternalStorageDirectory()
-									+ sep
-									+ pgnDir + sep + pgnFile;
-							Intent i = new Intent(ChessTastic.this,
-									LoadPGN.class);
-							i.setAction(pathName);
-							startActivityForResult(i, RESULT_LOAD_PGN);
-							dialog.dismiss();
-						}
-					});
-			AlertDialog alert = builder.create();
-            Toast.makeText(getApplicationContext(), "After you select a game from the pgn, use the undo and redo buttons to go back and forth in the game.",
-                    Toast.LENGTH_LONG).show();
-			return alert;
-		}
+
 		case CONFIRM_RESIGN_DIALOG: {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setMessage("Are you sure you want to resign?")
@@ -1929,8 +1888,8 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 
 	@Override
 	public void humanMoveMade(Move m) {
-		if (bGameCtrl != null)
-			bGameCtrl.sendMove(m);
+
+
 	}
 	
 	private class DrawerItemClickListener implements ListView.OnItemClickListener {
@@ -1942,12 +1901,6 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 			{
 			case 0:
 				drawerLayoutt.closeDrawers();
-				if (gameMode.bluetoothMode()) {
-					Intent serverIntent = new Intent(ChessTastic.this, DeviceListActivity.class);
-					startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
-					break;
-				}
-
 				if (autoSwapSides
 						&& (gameMode.playerWhite() != gameMode.playerBlack())) {
 					int gameModeType;
@@ -1962,7 +1915,6 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 					editor.commit();
 					gameMode = new GameMode(gameModeType);
 				}
-
 				ctrl.newGame(gameMode);
 				ctrl.startGame();
 				break;
@@ -1977,52 +1929,65 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 				ChessTastic.this.flipBoard();
 				break;
 			}
-			case 5: {
+			case 3: {
 				Intent i = new Intent(ChessTastic.this, Preferences.class);
 				startActivityForResult(i, RESULT_SETTINGS);
 				break;
 			}
-			
-			case 7: {
-				drawerLayoutt.closeDrawers();
-				showDialog(SELECT_MOVE_DIALOG);
-				break;
-			}
-			case 8: {
-				drawerLayoutt.closeDrawers();
-				if (ctrl != null && ctrl.computerBusy())
-				ctrl.stopSearch();
-				else
-					Toast.makeText(getApplicationContext(), "Busy",
-							   Toast.LENGTH_SHORT).show();
-				break;
-			}
+			case 4:
+                if (autoSwapSides
+                        && (gameMode.playerWhite() != gameMode.playerBlack())) {
+                    int gameModeType;
+                    if (gameMode.playerWhite()) {
+                        gameModeType = GameMode.PLAYER_BLACK;
+                    } else {
+                        gameModeType = GameMode.PLAYER_WHITE;
+                    }
+                    Editor editor = settings.edit();
+                    String gameModeStr = String.format("%d", gameModeType);
+                    editor.putString("gameMode", gameModeStr);
+                    editor.commit();
+                    gameMode = new GameMode(gameModeType);
+                }
+                ctrl.newGame(gameMode);
+                finishAffinity();
+//				removeDialog(SELECT_PGN_FILE_DIALOG);
+//				showDialog(SELECT_PGN_FILE_DIALOG);
+                break;
+//			case 7: {
+//				drawerLayoutt.closeDrawers();
+//				showDialog(SELECT_MOVE_DIALOG);
+//				break;
+//			}
+//			case 8: {
+//				drawerLayoutt.closeDrawers();
+//				if (ctrl != null && ctrl.computerBusy())
+//				ctrl.stopSearch();
+//				else
+//					Toast.makeText(getApplicationContext(), "Busy",
+//							   Toast.LENGTH_SHORT).show();
+//				break;
+//			}
 				/*
 				 * case R.id.item_draw: { if (ctrl.humansTurn()) { if
 				 * (!ctrl.claimDrawIfPossible()) {
 				 * Toast.makeText(getApplicationContext(), R.string.offer_draw,
 				 * Toast.LENGTH_SHORT).show(); } } return true; }
 				 */
-			case 6: {
-				
-				if (ctrl.humansTurn()) {
-					removeDialog(CONFIRM_RESIGN_DIALOG);
-					showDialog(CONFIRM_RESIGN_DIALOG);
-				}
-				break;
-			}
-			case 9:
-				removeDialog(SELECT_BOOK_DIALOG);
-				showDialog(SELECT_BOOK_DIALOG);
-				break;
-			case 4:
-				removeDialog(SELECT_PGN_FILE_DIALOG);
-				showDialog(SELECT_PGN_FILE_DIALOG);
-				break;
-			case 3:
-				Toast.makeText(getApplicationContext(), "Bluetooth is currently a work in progress.",
-						   Toast.LENGTH_LONG).show();
-				break;
+//			case 6: {
+//
+//				if (ctrl.humansTurn()) {
+//					removeDialog(CONFIRM_RESIGN_DIALOG);
+//					showDialog(CONFIRM_RESIGN_DIALOG);
+//				}
+//				break;
+//			}
+//			case 9:
+//				removeDialog(SELECT_BOOK_DIALOG);
+//				showDialog(SELECT_BOOK_DIALOG);
+//				break;
+
+
 			/*case R.id.bluetooth_create:
 				Intent serverIntent = new Intent(this, DeviceListActivity.class);
 				startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
@@ -2054,57 +2019,57 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 				}
 				return true;*/
 
-            case 10:
-                //rate
-                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
-                        ChessTastic.this);
-
-                // set title
-                alertDialogBuilder.setTitle("Rating and Feedback");
-
-                // set dialog message
-                alertDialogBuilder
-                        .setMessage("Do you like this app? Press Rate to add a good rating and some kind words on the Play Store. Are you facing any problems? Press the Feedback button below to send me an email!")
-                        .setCancelable(true)
-                        .setPositiveButton("Rate",new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog,int id) {
-                                // if this button is clicked, close
-                                // current activity
-                                final String appPackageName = getPackageName(); // getPackageName() from Context or Activity object
-                                try {
-                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-                                } catch (android.content.ActivityNotFoundException anfe) {
-                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
-                                }
-                            }
-                        })
-                        .setNegativeButton("Feedback",new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog,int id) {
-                                // if this button is clicked, just close
-                                // the dialog box and do nothing
-                                Toast.makeText(getApplicationContext(), "Opening email. Please tell me your problems. ", Toast.LENGTH_LONG).show();
-                                /*Intent i = new Intent(android.content.Intent.ACTION_SEND);
-                                i.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] {"avijitg22@gmail.com"});
-                                i.putExtra(android.content.Intent.EXTRA_SUBJECT, "ChessTastic™ Beta");
-                                //i.putExtra(Intent.EXTRA_TEXT, "\n\n\n\n"+"-----------------------------------------------------------------------"+"\n"+raw);
-                                i.setType("plain/text");
-                                startActivity(i);*/
-                                Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts(
-                                        "mailto","avijitg22@gmail.com", null));
-                                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "ChessTastic™ Beta");
-                                startActivity(Intent.createChooser(emailIntent, "Send email..."));
-                            }
-                        });
-
-                // create alert dialog
-                AlertDialog alertDialog = alertDialogBuilder.create();
-
-                // show it
-                alertDialog.show();
-                break;
-			case 11:
-				showDialog(ABOUT_DIALOG);
-				break;
+//            case 10:
+//                //rate
+//                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+//                        ChessTastic.this);
+//
+//                // set title
+//                alertDialogBuilder.setTitle("Rating and Feedback");
+//
+//                // set dialog message
+//                alertDialogBuilder
+//                        .setMessage("Do you like this app? Press Rate to add a good rating and some kind words on the Play Store. Are you facing any problems? Press the Feedback button below to send me an email!")
+//                        .setCancelable(true)
+//                        .setPositiveButton("Rate",new DialogInterface.OnClickListener() {
+//                            public void onClick(DialogInterface dialog,int id) {
+//                                // if this button is clicked, close
+//                                // current activity
+//                                final String appPackageName = getPackageName(); // getPackageName() from Context or Activity object
+//                                try {
+//                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+//                                } catch (android.content.ActivityNotFoundException anfe) {
+//                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+//                                }
+//                            }
+//                        })
+//                        .setNegativeButton("Feedback",new DialogInterface.OnClickListener() {
+//                            public void onClick(DialogInterface dialog,int id) {
+//                                // if this button is clicked, just close
+//                                // the dialog box and do nothing
+//                                Toast.makeText(getApplicationContext(), "Opening email. Please tell me your problems. ", Toast.LENGTH_LONG).show();
+//                                /*Intent i = new Intent(android.content.Intent.ACTION_SEND);
+//                                i.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] {"avijitg22@gmail.com"});
+//                                i.putExtra(android.content.Intent.EXTRA_SUBJECT, "ChessTastic™ Beta");
+//                                //i.putExtra(Intent.EXTRA_TEXT, "\n\n\n\n"+"-----------------------------------------------------------------------"+"\n"+raw);
+//                                i.setType("plain/text");
+//                                startActivity(i);*/
+//                                Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts(
+//                                        "mailto","avijitg22@gmail.com", null));
+//                                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "ChessTastic™ Beta");
+//                                startActivity(Intent.createChooser(emailIntent, "Send email..."));
+//                            }
+//                        });
+//
+//                // create alert dialog
+//                AlertDialog alertDialog = alertDialogBuilder.create();
+//
+//                // show it
+//                alertDialog.show();
+//                break;
+//			case 11:
+//				showDialog(ABOUT_DIALOG);
+//				break;
 			}
 			}
 		}
@@ -2116,7 +2081,8 @@ public class ChessTastic extends AppCompatActivity implements GUIInterface, OnSh
 class MyAdapter extends BaseAdapter{
 	
 	String[] options;
-	int[] images={R.drawable.newg,R.drawable.edit,R.drawable.flip,R.drawable.bt,R.drawable.pgn,R.drawable.settings,R.drawable.resign,R.drawable.goton,R.drawable.force,R.drawable.book,R.drawable.thumb,R.drawable.about};
+	int[] images={R.drawable.newg,R.drawable.edit,R.drawable.flip,R.drawable.settings,
+            R.drawable.resign};
 	private Context context;
 
 
@@ -2163,20 +2129,11 @@ class MyAdapter extends BaseAdapter{
 		TextView tv1=(TextView) row.findViewById(R.id.text1);
 		ImageView iv1=(ImageView) row.findViewById(R.id.image1);
         RelativeLayout lLayout = (RelativeLayout) row.findViewById(R.id.parentLayout);
-        if(position==3)
-        {
-            tv1.setText(options[position]);
-            tv1.setTextColor(ChessTastic.getContextOfApplication().getResources().getColor(R.color.disabled));
-		    iv1.setImageResource(images[position]);
-            //row.setVisibility(View.GONE);
-            lLayout.setVisibility(View.GONE);
 
-        }
-        else{
-            tv1.setText(options[position]);
+           tv1.setText(options[position]);
             iv1.setImageResource(images[position]);
             lLayout.setVisibility(View.VISIBLE);
-        }
+
 		
 		return row;
 	}

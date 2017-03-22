@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "alvi17.chessgame"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 25
 
         ndk {
@@ -34,4 +34,5 @@ repositories {
 dependencies {
     compile 'com.android.support:appcompat-v7:25.+'
     compile 'com.github.amlcurran.showcaseview:library:+'
+    compile 'com.google.android.gms:play-services-ads:10.2.1'
 }

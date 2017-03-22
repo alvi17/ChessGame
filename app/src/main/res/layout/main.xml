@@ -31,7 +31,7 @@
 	    android:layout_height="fill_parent"/>
 	<TextView
     	android:id="@+id/status"
-	    android:layout_width="fill_parent" 
+	    android:layout_width="fill_parent"
     	android:layout_height="wrap_content" 
 	    android:includeFontPadding="true"
     	android:textStyle="bold"
@@ -41,15 +41,28 @@
 		android:id="@+id/scrollView"
 		android:layout_width="fill_parent"
 		android:layout_height="0dp"
+
 		android:layout_weight="1">
-		<TextView
-    		android:id="@+id/moveList"
-	    	android:layout_width="fill_parent" 
-    		android:layout_height="wrap_content" 
-	    	android:includeFontPadding="true"
-    		
-		    android:textAppearance="?android:attr/textAppearanceSmall"/>
-		<!--  android:typeface="monospace"-->
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:layout_gravity="bottom"
+			android:gravity="bottom"
+			android:id="@+id/adsLayout"
+			android:orientation="vertical"
+			>
+			<TextView
+				android:id="@+id/moveList"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:includeFontPadding="true"
+				android:visibility="gone"
+				android:textAppearance="?android:attr/textAppearanceSmall"/>
+			<!--  android:typeface="monospace"-->
+		</LinearLayout>
+
 	</ScrollView>
 	<TextView
     	android:id="@+id/thinking"
@@ -63,12 +76,15 @@
 		</LinearLayout>
 		<ListView
 		android:id="@+id/left_drawer"
-		android:layout_width="304dp"
+		android:layout_width="220dp"
 		android:layout_height="match_parent"
 		android:layout_gravity="start"
-		android:background="#212121"
+		android:background="#131313"
 		android:choiceMode="singleChoice"
-		android:divider="@android:color/transparent"
-		android:dividerHeight="0dp"/>
+		android:divider="#d8c8ccc8"
+		android:dividerHeight="1dp"/>
     </android.support.v4.widget.DrawerLayout>
+
+
+
 </LinearLayout>
